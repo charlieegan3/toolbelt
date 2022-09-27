@@ -14,7 +14,19 @@ import (
 func main() {
 	tb := tool.NewBelt()
 
-	err := tb.AddTool(example.HelloWorld{})
+	// this might be loaded from disk in some real example
+	tb.SetConfig(map[string]any{
+		"config-tool": map[string]any{
+			"exampleValue": "example config value",
+		},
+	})
+
+	err := tb.AddTool(&example.HelloWorld{})
+	if err != nil {
+		log.Fatalf("failed to add tool: %v", err)
+	}
+
+	err = tb.AddTool(&example.ConfigTool{})
 	if err != nil {
 		log.Fatalf("failed to add tool: %v", err)
 	}

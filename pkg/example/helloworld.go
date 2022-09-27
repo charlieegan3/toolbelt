@@ -11,15 +11,19 @@ import (
 // 'Hello World'
 type HelloWorld struct{}
 
-func (hw HelloWorld) Name() string {
-	return "Hello World"
-}
-
-func (hw HelloWorld) HTTPPath() string {
+func (hw *HelloWorld) Name() string {
 	return "hello-world"
 }
 
-func (hw HelloWorld) HTTPAttach(router *mux.Router) error {
+func (hw *HelloWorld) HTTPPath() string {
+	return "example-hello-world"
+}
+
+func (hw *HelloWorld) SetConfig(config map[string]any) error {
+	return nil
+}
+
+func (hw *HelloWorld) HTTPAttach(router *mux.Router) error {
 	router.HandleFunc("", utilshttp.BuildRedirectHandler(hw.HTTPPath()+"/")).Methods("GET")
 
 	router.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
