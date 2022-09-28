@@ -9,13 +9,17 @@ import (
 // FeatureSet is a list of optional features that a tool may use. Use of a feature will require more configuration from
 // the tool belt.
 type FeatureSet struct {
-	// HTTP, if true, indicates that the tool needs to mount a subrouter on the tool belt webserver
-	HTTP bool
 	// Config, if true, indicates that the tool expects some config values to be passed at initialization time
 	Config bool
 	// Database, if true, indicates that the tool expects to connect to the tool belt database, owns a schema and will
 	// have migrations that must be run.
 	Database bool
+
+	// HTTP, if true, indicates that the tool needs to mount a subrouter on the tool belt webserver
+	HTTP bool
+
+	// Jobs, if true, indicates that the tool has jobs which the belt must run
+	Jobs bool
 }
 
 type Tool interface {
@@ -29,13 +33,16 @@ type Tool interface {
 	// SetConfig sets the configuration for the tool
 	SetConfig(config map[string]interface{}) error
 
+	// DatabaseMigrate runs the database migrations for the tool
+	DatabaseMigrations() (*embed.FS, string, error)
+	// DatabaseSet sets the database connection for the tool
+	DatabaseSet(db *sql.DB)
+
 	// HTTPPath returns the base path to use for the subrouter
 	HTTPPath() string
 	// HTTPAttach configures the tool's subrouter
 	HTTPAttach(router *mux.Router) error
 
-	// DatabaseMigrate runs the database migrations for the tool
-	DatabaseMigrations() (*embed.FS, string, error)
-	// DatabaseSet sets the database connection for the tool
-	DatabaseSet(db *sql.DB)
+	// Jobs returns a list of jobs that the tool defines and needs to have run
+	Jobs() []Job
 }

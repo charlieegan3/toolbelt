@@ -8,6 +8,7 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/gorilla/mux"
+	"github.com/robfig/cron"
 	"log"
 	"net/http"
 	"os"
@@ -26,12 +27,15 @@ type Belt struct {
 	config map[string]any
 
 	db *sql.DB
+
+	cron *cron.Cron
 }
 
 // NewBelt creates a new Belt struct with an initalized router
 func NewBelt() *Belt {
 	return &Belt{
 		Router: mux.NewRouter(),
+		cron:   cron.New(),
 	}
 }
 
@@ -87,6 +91,15 @@ func (b *Belt) AddTool(tool apis.Tool) error {
 		err := tool.HTTPAttach(toolRouter)
 		if err != nil {
 			return fmt.Errorf("failed to attach tool: %v", err)
+		}
+	}
+
+	if tool.FeatureSet().Jobs {
+		for _, job := range tool.Jobs() {
+			err := b.AddJob(job)
+			if err != nil {
+				return fmt.Errorf("failed to add job for tool %s: %w", tool.Name(), err)
+			}
 		}
 	}
 
@@ -155,4 +168,53 @@ func (b *Belt) StopServer(timeout time.Duration) error {
 	defer cancel()
 
 	return b.server.Shutdown(ctx)
+}
+
+func (b *Belt) AddJob(job apis.Job) error {
+	err := b.cron.AddFunc(
+		job.Schedule(),
+		func() {
+			log.Printf("running job %s", job.Name())
+			ctx, cancel := context.WithTimeout(context.Background(), job.Timeout())
+			defer cancel()
+
+			doneCh := make(chan error, 1)
+			panicCh := make(chan interface{}, 1)
+
+			go func() {
+				defer func() {
+					if p := recover(); p != nil {
+						panicCh <- p
+					}
+				}()
+
+				doneCh <- job.Run()
+			}()
+
+			select {
+			case err := <-doneCh:
+				if err != nil {
+					log.Printf("error running job %s: %v", job.Name(), err)
+				} else {
+					log.Printf("ran job %s", job.Name())
+				}
+			case p := <-panicCh:
+				log.Printf("error running job %s, panicked: %v", job.Name(), p)
+			case <-ctx.Done():
+				log.Printf("error running job %s, timed out", job.Name())
+			}
+
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to add job %s to cron: %v", job.Name(), err)
+	}
+
+	return nil
+}
+
+func (b *Belt) RunJobs() {
+	go func() {
+		b.cron.Start()
+	}()
 }

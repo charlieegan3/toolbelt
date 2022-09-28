@@ -28,6 +28,13 @@ func main() {
 		log.Fatalf("failed to add tool: %v", err)
 	}
 
+	err = tb.AddTool(&example.Jobs{})
+	if err != nil {
+		log.Fatalf("failed to add tool: %v", err)
+	}
+
+	tb.RunJobs()
+
 	c := tb.StartServer("0.0.0.0", "3000")
 
 	<-c // wait for interrupt
