@@ -2,6 +2,7 @@ package example
 
 import (
 	"fmt"
+	"github.com/charlieegan3/toolbelt/pkg/apis"
 	utilshttp "github.com/charlieegan3/toolbelt/pkg/utils/http"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -14,6 +15,14 @@ type ConfigTool struct {
 
 func (c *ConfigTool) Name() string {
 	return "config-tool"
+}
+
+func (c *ConfigTool) FeatureSet() apis.FeatureSet {
+	// this tool makes use of the config feature
+	return apis.FeatureSet{
+		HTTP:   true,
+		Config: true,
+	}
 }
 
 func (c *ConfigTool) HTTPPath() string {

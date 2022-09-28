@@ -4,6 +4,7 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 
+	"github.com/charlieegan3/toolbelt/pkg/apis"
 	utilshttp "github.com/charlieegan3/toolbelt/pkg/utils/http"
 )
 
@@ -15,10 +16,18 @@ func (hw *HelloWorld) Name() string {
 	return "hello-world"
 }
 
+func (hw *HelloWorld) FeatureSet() apis.FeatureSet {
+	// This tool only uses the HTTP feature
+	return apis.FeatureSet{
+		HTTP: true,
+	}
+}
+
 func (hw *HelloWorld) HTTPPath() string {
 	return "example-hello-world"
 }
 
+// SetConfig is a no-op for this tool
 func (hw *HelloWorld) SetConfig(config map[string]any) error {
 	return nil
 }
