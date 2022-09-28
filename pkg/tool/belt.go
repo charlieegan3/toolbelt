@@ -49,18 +49,6 @@ func (b *Belt) AddTool(tool apis.Tool) error {
 		}
 	}
 
-	if tool.FeatureSet().HTTP {
-		path := tool.HTTPPath()
-		if path == "" {
-			return fmt.Errorf("tool %s cannot use the HTTP feature with a blank HTTPPath", tool.Name())
-		}
-		toolRouter := b.Router.PathPrefix(fmt.Sprintf("/%s", path)).Subrouter()
-		err := tool.HTTPAttach(toolRouter)
-		if err != nil {
-			return fmt.Errorf("failed to attach tool: %v", err)
-		}
-	}
-
 	if tool.FeatureSet().Database {
 		if b.db == nil {
 			return fmt.Errorf("tool %s requires a database but none was provided", tool.Name())
@@ -88,6 +76,18 @@ func (b *Belt) AddTool(tool apis.Tool) error {
 		}
 
 		tool.DatabaseSet(b.db)
+	}
+
+	if tool.FeatureSet().HTTP {
+		path := tool.HTTPPath()
+		if path == "" {
+			return fmt.Errorf("tool %s cannot use the HTTP feature with a blank HTTPPath", tool.Name())
+		}
+		toolRouter := b.Router.PathPrefix(fmt.Sprintf("/%s", path)).Subrouter()
+		err := tool.HTTPAttach(toolRouter)
+		if err != nil {
+			return fmt.Errorf("failed to attach tool: %v", err)
+		}
 	}
 
 	return nil

@@ -8,7 +8,9 @@ import (
 )
 
 func TestDatabaseSuite(t *testing.T) {
-	s := &DatabaseSuite{}
+	s := &DatabaseSuite{
+		ConfigPath: "../../../config.test.yaml",
+	}
 
 	s.Setup(t)
 

@@ -15,17 +15,20 @@ type DependentSuite interface {
 // DatabaseSuite is the top of the test suite hierarchy for all tests that use
 // the database.
 type DatabaseSuite struct {
+	ConfigPath string
+	DB         *sql.DB
+
 	suite.Suite
-
 	suites []DependentSuite
-
-	DB *sql.DB
 }
 
 func (s *DatabaseSuite) Setup(t *testing.T) {
-	// use viper as we do in commands to load in the config, this time, the
-	// config is hardcoded to the test config file
-	viper.SetConfigFile("../../../config.test.yaml")
+	defaultConfigPath := "../../../config.test.yaml"
+	if s.ConfigPath == "" {
+		s.ConfigPath = defaultConfigPath
+	}
+
+	viper.SetConfigFile(s.ConfigPath)
 	err := viper.ReadInConfig()
 	if err != nil {
 		t.Fatalf("failed to load test config: %s", err)
