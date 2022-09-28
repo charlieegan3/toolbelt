@@ -1,0 +1,1 @@
+DELETE FROM databasetool.example WHERE note = 'database value';

@@ -1,13 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"net/http"
-	"time"
-
 	"github.com/charlieegan3/toolbelt/pkg/example"
 	"github.com/charlieegan3/toolbelt/pkg/tool"
+	"log"
+	"time"
 )
 
 // this is an example use of a Tool Belt showing the registration of an example Hello World tool
@@ -31,12 +28,12 @@ func main() {
 		log.Fatalf("failed to add tool: %v", err)
 	}
 
-	srv := &http.Server{
-		Handler:      tb.Router,
-		Addr:         fmt.Sprintf("%s:%s", "0.0.0.0", "3000"),
-		WriteTimeout: 30 * time.Second,
-		ReadTimeout:  30 * time.Second,
-	}
+	c := tb.StartServer("0.0.0.0", "3000")
 
-	log.Fatal(srv.ListenAndServe())
+	<-c // wait for interrupt
+
+	err = tb.StopServer(5 * time.Second)
+	if err != nil {
+		log.Fatalf("failed to stop server: %v", err)
+	}
 }

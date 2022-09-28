@@ -1,6 +1,9 @@
 package example
 
 import (
+	"database/sql"
+	"embed"
+	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 
@@ -31,6 +34,12 @@ func (hw *HelloWorld) HTTPPath() string {
 func (hw *HelloWorld) SetConfig(config map[string]any) error {
 	return nil
 }
+
+func (hw *HelloWorld) DatabaseMigrations() (*embed.FS, string, error) {
+	return nil, "", fmt.Errorf("not implemented")
+}
+
+func (hw *HelloWorld) DatabaseSet(db *sql.DB) {}
 
 func (hw *HelloWorld) HTTPAttach(router *mux.Router) error {
 	router.HandleFunc("", utilshttp.BuildRedirectHandler(hw.HTTPPath()+"/")).Methods("GET")

@@ -1,0 +1,1 @@
+INSERT INTO databasetool.example VALUES ('database value');

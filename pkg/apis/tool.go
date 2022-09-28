@@ -1,6 +1,10 @@
 package apis
 
-import "github.com/gorilla/mux"
+import (
+	"database/sql"
+	"embed"
+	"github.com/gorilla/mux"
+)
 
 // FeatureSet is a list of optional features that a tool may use. Use of a feature will require more configuration from
 // the tool belt.
@@ -29,4 +33,9 @@ type Tool interface {
 	HTTPPath() string
 	// HTTPAttach configures the tool's subrouter
 	HTTPAttach(router *mux.Router) error
+
+	// DatabaseMigrate runs the database migrations for the tool
+	DatabaseMigrations() (*embed.FS, string, error)
+	// DatabaseSet sets the database connection for the tool
+	DatabaseSet(db *sql.DB)
 }

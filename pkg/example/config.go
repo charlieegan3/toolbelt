@@ -1,6 +1,8 @@
 package example
 
 import (
+	"database/sql"
+	"embed"
 	"fmt"
 	"github.com/charlieegan3/toolbelt/pkg/apis"
 	utilshttp "github.com/charlieegan3/toolbelt/pkg/utils/http"
@@ -39,6 +41,12 @@ func (c *ConfigTool) SetConfig(config map[string]any) error {
 
 	return nil
 }
+
+func (c *ConfigTool) DatabaseMigrations() (*embed.FS, string, error) {
+	return nil, "", fmt.Errorf("not implemented")
+}
+
+func (c *ConfigTool) DatabaseSet(db *sql.DB) {}
 
 func (c *ConfigTool) HTTPAttach(router *mux.Router) error {
 	router.HandleFunc("", utilshttp.BuildRedirectHandler(c.HTTPPath()+"/")).Methods("GET")
