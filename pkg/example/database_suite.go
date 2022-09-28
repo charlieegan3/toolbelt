@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
@@ -17,6 +18,10 @@ import (
 type ExampleDatabaseToolSuite struct {
 	suite.Suite
 	DB *sql.DB
+}
+
+func (s ExampleDatabaseToolSuite) Run(t *testing.T) {
+	suite.Run(t, &s)
 }
 
 func (s *ExampleDatabaseToolSuite) TestDatabaseTool() {
