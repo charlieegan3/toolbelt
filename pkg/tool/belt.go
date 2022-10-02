@@ -4,16 +4,18 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
+	"net/http"
+	"time"
+
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/gorilla/mux"
 	"github.com/robfig/cron"
-	"log"
-	"net/http"
-	"time"
 
 	"github.com/charlieegan3/toolbelt/pkg/apis"
+	utilsHTTP "github.com/charlieegan3/toolbelt/pkg/utils/http"
 )
 
 // Belt is the main struct for the Tool Belt. It contains the base router which all tools are registered to
@@ -31,8 +33,11 @@ type Belt struct {
 
 // NewBelt creates a new Belt struct with an initalized router
 func NewBelt() *Belt {
+	r := mux.NewRouter()
+	r.Use(utilsHTTP.InitMiddlewareLogging())
+
 	return &Belt{
-		Router: mux.NewRouter(),
+		Router: r,
 	}
 }
 
@@ -173,6 +178,7 @@ func (b *Belt) RunJobs(ctx context.Context) {
 	crn := cron.New()
 
 	for _, job := range b.jobs {
+		log.Printf("loaded job %q with schedule %q", job.Name(), job.Schedule())
 		err := crn.AddFunc(
 			job.Schedule(),
 			func() {
@@ -216,13 +222,14 @@ func (b *Belt) RunJobs(ctx context.Context) {
 		}
 	}
 
+	log.Printf("job worker started")
 	go func() {
 		crn.Start()
 	}()
 
 	select {
 	case <-ctx.Done():
-		log.Println("Shutting down cron")
+		log.Println("stopping job worker")
 		crn.Stop()
 	}
 }
