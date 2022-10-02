@@ -1,16 +1,14 @@
 package example
 
 import (
+	"context"
 	"database/sql"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"testing"
-	"time"
-
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/charlieegan3/toolbelt/pkg/tool"
 )
@@ -36,13 +34,10 @@ func (s *ExampleDatabaseToolSuite) TestDatabaseTool() {
 	err := tb.AddTool(databaseTool)
 	require.NoError(t, err)
 
-	c := tb.StartServer("0.0.0.0", "9032")
-	require.NoError(t, err)
-	defer func() {
-		c <- os.Interrupt
-		err = tb.StopServer(5 * time.Second)
-		require.NoError(t, err)
-	}()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go tb.RunServer(ctx, "0.0.0.0", "9032")
 
 	req := &http.Request{
 		Method: "GET",

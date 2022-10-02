@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"github.com/charlieegan3/toolbelt/pkg/example"
 	"github.com/charlieegan3/toolbelt/pkg/tool"
 	"log"
-	"time"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 // this is an example use of a Tool Belt showing the registration of an example Hello World tool
@@ -33,14 +36,19 @@ func main() {
 		log.Fatalf("failed to add tool: %v", err)
 	}
 
-	tb.RunJobs()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	c := tb.StartServer("0.0.0.0", "3000")
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		select {
+		case <-c:
+			cancel()
+		}
+	}()
 
-	<-c // wait for interrupt
+	tb.RunJobs(ctx)
 
-	err = tb.StopServer(5 * time.Second)
-	if err != nil {
-		log.Fatalf("failed to stop server: %v", err)
-	}
+	tb.RunServer(ctx, "0.0.0.0", "3000")
 }

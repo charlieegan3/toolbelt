@@ -1,6 +1,7 @@
 package example
 
 import (
+	"context"
 	"database/sql"
 	"embed"
 	"fmt"
@@ -43,15 +44,30 @@ func (e *exampleJob) Name() string {
 	return "example-job"
 }
 
-func (e *exampleJob) Run() error {
-	fmt.Println(e.Name(), "ran")
-	return nil
+func (e *exampleJob) Run(ctx context.Context) error {
+	doneCh := make(chan bool)
+	errCh := make(chan error)
+
+	go func() {
+		time.Sleep(1 * time.Second)
+		fmt.Println(e.Name(), "ran")
+		doneCh <- true
+	}()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case e := <-errCh:
+		return fmt.Errorf("job failed with error: %s", e)
+	case <-doneCh:
+		return nil
+	}
 }
 
 func (e *exampleJob) Timeout() time.Duration {
-	return 5 * time.Second
+	return 3 * time.Second
 }
 
 func (e *exampleJob) Schedule() string {
-	return "*/3 * * * * *"
+	return "*/10 * * * * *"
 }

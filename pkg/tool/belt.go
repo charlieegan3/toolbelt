@@ -11,8 +11,6 @@ import (
 	"github.com/robfig/cron"
 	"log"
 	"net/http"
-	"os"
-	"os/signal"
 	"time"
 
 	"github.com/charlieegan3/toolbelt/pkg/apis"
@@ -28,14 +26,13 @@ type Belt struct {
 
 	db *sql.DB
 
-	cron *cron.Cron
+	jobs []apis.Job
 }
 
 // NewBelt creates a new Belt struct with an initalized router
 func NewBelt() *Belt {
 	return &Belt{
 		Router: mux.NewRouter(),
-		cron:   cron.New(),
 	}
 }
 
@@ -96,10 +93,7 @@ func (b *Belt) AddTool(tool apis.Tool) error {
 
 	if tool.FeatureSet().Jobs {
 		for _, job := range tool.Jobs() {
-			err := b.AddJob(job)
-			if err != nil {
-				return fmt.Errorf("failed to add job for tool %s: %w", tool.Name(), err)
-			}
+			b.AddJob(job)
 		}
 	}
 
@@ -142,7 +136,7 @@ func (b *Belt) DatabaseDownMigrate(tool apis.Tool) error {
 	return nil
 }
 
-func (b *Belt) StartServer(host, port string) chan os.Signal {
+func (b *Belt) RunServer(ctx context.Context, host, port string) {
 	b.server = &http.Server{
 		Handler:      b.Router,
 		Addr:         fmt.Sprintf("%s:%s", host, port),
@@ -157,64 +151,78 @@ func (b *Belt) StartServer(host, port string) chan os.Signal {
 		}
 	}()
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	select {
+	case <-ctx.Done():
+		log.Println("Shutting down server")
 
-	return c
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+
+		if err := b.server.Shutdown(ctx); err != nil {
+			log.Fatalf("Graceful shutdown failed: %s", err)
+		}
+		log.Println("Server gracefully stopped")
+	}
 }
 
-func (b *Belt) StopServer(timeout time.Duration) error {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	return b.server.Shutdown(ctx)
+func (b *Belt) AddJob(job apis.Job) {
+	b.jobs = append(b.jobs, job)
 }
 
-func (b *Belt) AddJob(job apis.Job) error {
-	err := b.cron.AddFunc(
-		job.Schedule(),
-		func() {
-			log.Printf("running job %s", job.Name())
-			ctx, cancel := context.WithTimeout(context.Background(), job.Timeout())
-			defer cancel()
+func (b *Belt) RunJobs(ctx context.Context) {
+	crn := cron.New()
 
-			doneCh := make(chan error, 1)
-			panicCh := make(chan interface{}, 1)
+	for _, job := range b.jobs {
+		err := crn.AddFunc(
+			job.Schedule(),
+			func() {
+				log.Printf("running job %s", job.Name())
+				jobCtx, cancel := context.WithTimeout(ctx, job.Timeout())
+				defer cancel()
 
-			go func() {
-				defer func() {
-					if p := recover(); p != nil {
-						panicCh <- p
-					}
+				doneCh := make(chan error, 1)
+				panicCh := make(chan interface{}, 1)
+
+				go func() {
+					defer func() {
+						if p := recover(); p != nil {
+							panicCh <- p
+						}
+					}()
+
+					doneCh <- job.Run(jobCtx)
 				}()
 
-				doneCh <- job.Run()
-			}()
-
-			select {
-			case err := <-doneCh:
-				if err != nil {
-					log.Printf("error running job %s: %v", job.Name(), err)
-				} else {
-					log.Printf("ran job %s", job.Name())
+				select {
+				case err := <-doneCh:
+					if err != nil {
+						log.Printf("error running job %s: %v", job.Name(), err)
+					} else {
+						log.Printf("ran job %s", job.Name())
+					}
+				case p := <-panicCh:
+					log.Printf("error running job %s, panicked: %v", job.Name(), p)
+				case <-ctx.Done():
+					if ctx.Err() == context.DeadlineExceeded {
+						log.Printf("parent context timed out during job: %s", job.Name())
+					} else if ctx.Err() == context.Canceled {
+						log.Printf("parent context cancelled during job: %s", job.Name())
+					}
 				}
-			case p := <-panicCh:
-				log.Printf("error running job %s, panicked: %v", job.Name(), p)
-			case <-ctx.Done():
-				log.Printf("error running job %s, timed out", job.Name())
-			}
-
-		},
-	)
-	if err != nil {
-		return fmt.Errorf("failed to add job %s to cron: %v", job.Name(), err)
+			},
+		)
+		if err != nil {
+			log.Printf("failed to add job %s to cron: %v", job.Name(), err)
+		}
 	}
 
-	return nil
-}
-
-func (b *Belt) RunJobs() {
 	go func() {
-		b.cron.Start()
+		crn.Start()
 	}()
+
+	select {
+	case <-ctx.Done():
+		log.Println("Shutting down cron")
+		crn.Stop()
+	}
 }
