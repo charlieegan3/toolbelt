@@ -12,33 +12,37 @@ import (
 	"github.com/charlieegan3/toolbelt/pkg/apis"
 )
 
-// Jobs is an example tool which demonstrates the use of the toolbelt's job running functionality
-type Jobs struct{}
+// JobsTool is an example tool which demonstrates the use of the toolbelt's job running functionality
+type JobsTool struct {
+	Count *int
+}
 
-func (hw *Jobs) Name() string {
+func (jt *JobsTool) Name() string {
 	return "jobs"
 }
 
-func (hw *Jobs) FeatureSet() apis.FeatureSet {
+func (jt *JobsTool) FeatureSet() apis.FeatureSet {
 	return apis.FeatureSet{
 		Jobs: true,
 	}
 }
 
-func (hw *Jobs) Jobs() []apis.Job {
-	return []apis.Job{&exampleJob{}}
+func (jt *JobsTool) Jobs() []apis.Job {
+	return []apis.Job{&exampleJob{Count: jt.Count}}
 }
 
-func (hw *Jobs) SetConfig(config map[string]any) error { return nil }
-func (hw *Jobs) DatabaseMigrations() (*embed.FS, string, error) {
+func (jt *JobsTool) SetConfig(config map[string]any) error { return nil }
+func (jt *JobsTool) DatabaseMigrations() (*embed.FS, string, error) {
 	return nil, "", fmt.Errorf("not implemented")
 }
-func (hw *Jobs) DatabaseSet(db *sql.DB)              {}
-func (hw *Jobs) HTTPPath() string                    { return "" }
-func (hw *Jobs) HTTPAttach(router *mux.Router) error { return nil }
+func (jt *JobsTool) DatabaseSet(db *sql.DB)              {}
+func (jt *JobsTool) HTTPPath() string                    { return "" }
+func (jt *JobsTool) HTTPAttach(router *mux.Router) error { return nil }
 
 // exampleJob shows a trivial apis.Job implementation
-type exampleJob struct{}
+type exampleJob struct {
+	Count *int
+}
 
 func (e *exampleJob) Name() string {
 	return "example-job"
@@ -49,7 +53,7 @@ func (e *exampleJob) Run(ctx context.Context) error {
 	errCh := make(chan error)
 
 	go func() {
-		time.Sleep(1 * time.Second)
+		*e.Count = *e.Count + 1
 		fmt.Println(e.Name(), "ran")
 		doneCh <- true
 	}()
@@ -69,5 +73,5 @@ func (e *exampleJob) Timeout() time.Duration {
 }
 
 func (e *exampleJob) Schedule() string {
-	return "*/10 * * * * *"
+	return "* * * * * *"
 }

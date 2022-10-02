@@ -14,7 +14,8 @@ func TestDatabaseSuite(t *testing.T) {
 
 	s.Setup(t)
 
-	s.AddDependentSuite(example.ExampleDatabaseToolSuite{DB: s.DB})
+	s.AddDependentSuite(&example.ExampleDatabaseToolSuite{DB: s.DB})
+	s.AddDependentSuite(&example.ExampleJobsToolSuite{DB: s.DB})
 
 	s.Run(t)
 }

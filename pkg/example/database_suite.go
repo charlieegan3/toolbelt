@@ -18,8 +18,8 @@ type ExampleDatabaseToolSuite struct {
 	DB *sql.DB
 }
 
-func (s ExampleDatabaseToolSuite) Run(t *testing.T) {
-	suite.Run(t, &s)
+func (s *ExampleDatabaseToolSuite) Run(t *testing.T) {
+	suite.Run(t, s)
 }
 
 func (s *ExampleDatabaseToolSuite) TestDatabaseTool() {
