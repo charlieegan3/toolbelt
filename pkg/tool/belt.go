@@ -177,8 +177,11 @@ func (b *Belt) AddJob(job apis.Job) {
 func (b *Belt) RunJobs(ctx context.Context) {
 	crn := cron.New()
 
-	for _, job := range b.jobs {
+	for i := range b.jobs {
+		job := b.jobs[i]
+
 		log.Printf("loaded job %q with schedule %q", job.Name(), job.Schedule())
+
 		err := crn.AddFunc(
 			job.Schedule(),
 			func() {
