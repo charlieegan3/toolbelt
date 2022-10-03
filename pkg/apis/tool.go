@@ -44,5 +44,5 @@ type Tool interface {
 	HTTPAttach(router *mux.Router) error
 
 	// Jobs returns a list of jobs that the tool defines and needs to have run
-	Jobs() []Job
+	Jobs() ([]Job, error)
 }

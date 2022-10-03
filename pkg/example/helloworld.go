@@ -41,8 +41,8 @@ func (hw *HelloWorld) DatabaseMigrations() (*embed.FS, string, error) {
 
 func (hw *HelloWorld) DatabaseSet(db *sql.DB) {}
 
-func (hw *HelloWorld) Jobs() []apis.Job {
-	return []apis.Job{}
+func (hw *HelloWorld) Jobs() ([]apis.Job, error) {
+	return []apis.Job{}, nil
 }
 
 func (hw *HelloWorld) HTTPAttach(router *mux.Router) error {

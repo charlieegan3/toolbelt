@@ -27,8 +27,8 @@ func (jt *JobsTool) FeatureSet() apis.FeatureSet {
 	}
 }
 
-func (jt *JobsTool) Jobs() []apis.Job {
-	return []apis.Job{&exampleJob{Count: jt.Count}}
+func (jt *JobsTool) Jobs() ([]apis.Job, error) {
+	return []apis.Job{&exampleJob{Count: jt.Count}}, nil
 }
 
 func (jt *JobsTool) SetConfig(config map[string]any) error { return nil }

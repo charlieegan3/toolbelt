@@ -97,7 +97,11 @@ func (b *Belt) AddTool(tool apis.Tool) error {
 	}
 
 	if tool.FeatureSet().Jobs {
-		for _, job := range tool.Jobs() {
+		loadedJobs, err := tool.Jobs()
+		if err != nil {
+			return fmt.Errorf("failed to get jobs for tool %s: %w", tool.Name(), err)
+		}
+		for _, job := range loadedJobs {
 			b.AddJob(job)
 		}
 	}

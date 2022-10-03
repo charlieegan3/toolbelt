@@ -48,8 +48,8 @@ func (c *ConfigTool) DatabaseMigrations() (*embed.FS, string, error) {
 
 func (c *ConfigTool) DatabaseSet(db *sql.DB) {}
 
-func (c *ConfigTool) Jobs() []apis.Job {
-	return []apis.Job{}
+func (c *ConfigTool) Jobs() ([]apis.Job, error) {
+	return []apis.Job{}, nil
 }
 
 func (c *ConfigTool) HTTPAttach(router *mux.Router) error {
