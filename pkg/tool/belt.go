@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"strings"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
@@ -66,7 +67,9 @@ func (b *Belt) AddTool(tool apis.Tool) error {
 			return fmt.Errorf("failed to get database migrations for tool %s: %w", tool.Name(), err)
 		}
 
-		driver, err := postgres.WithInstance(b.db, &postgres.Config{})
+		driver, err := postgres.WithInstance(b.db, &postgres.Config{
+			MigrationsTable: fmt.Sprintf("schema_migrations_%s", strings.ReplaceAll(tool.Name(), "-", "_")),
+		})
 		if err != nil {
 			return fmt.Errorf("failed to create database driver for tool %s: %w", tool.Name(), err)
 		}
@@ -81,7 +84,7 @@ func (b *Belt) AddTool(tool apis.Tool) error {
 		if err != nil && err != migrate.ErrNoChange {
 			return fmt.Errorf("failed to run database migrations for tool %s: %w", tool.Name(), err)
 		}
-
+		
 		tool.DatabaseSet(b.db)
 	}
 
