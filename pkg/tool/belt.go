@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
@@ -84,7 +84,7 @@ func (b *Belt) AddTool(tool apis.Tool) error {
 		if err != nil && err != migrate.ErrNoChange {
 			return fmt.Errorf("failed to run database migrations for tool %s: %w", tool.Name(), err)
 		}
-		
+
 		tool.DatabaseSet(b.db)
 	}
 
@@ -193,12 +193,14 @@ func (b *Belt) RunJobs(ctx context.Context) {
 		for i := range jobs {
 			job := b.jobs[toolName][i]
 
-			log.Printf("loaded job \"%s/%s\" with schedule %q", toolName, job.Name(), job.Schedule())
+			jobRef := fmt.Sprintf("%s/%s", toolName, job.Name())
+
+			log.Printf("loaded job %q with schedule %q", jobRef, job.Schedule())
 
 			err := crn.AddFunc(
 				job.Schedule(),
 				func() {
-					log.Printf("running job \"%s/%s\"", toolName, job.Name())
+					log.Printf("running job %q", jobRef)
 					jobCtx, cancel := context.WithTimeout(ctx, job.Timeout())
 					defer cancel()
 
@@ -218,23 +220,23 @@ func (b *Belt) RunJobs(ctx context.Context) {
 					select {
 					case err := <-doneCh:
 						if err != nil {
-							log.Printf("error running job %s: %v", job.Name(), err)
+							log.Printf("error running job %q: %v", jobRef, err)
 						} else {
-							log.Printf("ran job %s", job.Name())
+							log.Printf("ran job %q", jobRef)
 						}
 					case p := <-panicCh:
-						log.Printf("error running job %s, panicked: %v", job.Name(), p)
+						log.Printf("error running job %q, panicked: %v", jobRef, p)
 					case <-ctx.Done():
 						if ctx.Err() == context.DeadlineExceeded {
-							log.Printf("parent context timed out during job: %s", job.Name())
+							log.Printf("parent context timed out during job %q", jobRef)
 						} else if ctx.Err() == context.Canceled {
-							log.Printf("parent context cancelled during job: %s", job.Name())
+							log.Printf("parent context cancelled during job %q", jobRef)
 						}
 					}
 				},
 			)
 			if err != nil {
-				log.Printf("failed to add job %s to cron: %v", job.Name(), err)
+				log.Printf("failed to add job %q to cron: %v", jobRef, err)
 			}
 		}
 	}
