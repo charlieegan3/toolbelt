@@ -31,7 +31,8 @@ func main() {
 		log.Fatalf("failed to add tool: %v", err)
 	}
 
-	err = tb.AddTool(&example.JobsTool{})
+	count := 0
+	err = tb.AddTool(&example.JobsTool{Count: &count})
 	if err != nil {
 		log.Fatalf("failed to add tool: %v", err)
 	}

@@ -28,7 +28,7 @@ type Belt struct {
 
 	db *sql.DB
 
-	jobs []apis.Job
+	jobs map[string][]apis.Job
 }
 
 // NewBelt creates a new Belt struct with an initalized router
@@ -38,6 +38,7 @@ func NewBelt() *Belt {
 
 	return &Belt{
 		Router: r,
+		jobs:   make(map[string][]apis.Job),
 	}
 }
 
@@ -102,7 +103,7 @@ func (b *Belt) AddTool(tool apis.Tool) error {
 			return fmt.Errorf("failed to get jobs for tool %s: %w", tool.Name(), err)
 		}
 		for _, job := range loadedJobs {
-			b.AddJob(job)
+			b.AddJob(tool.Name(), job)
 		}
 	}
 
@@ -174,58 +175,64 @@ func (b *Belt) RunServer(ctx context.Context, host, port string) {
 	}
 }
 
-func (b *Belt) AddJob(job apis.Job) {
-	b.jobs = append(b.jobs, job)
+func (b *Belt) AddJob(toolName string, job apis.Job) {
+	if _, ok := b.jobs[toolName]; !ok {
+		b.jobs[toolName] = []apis.Job{}
+	}
+
+	b.jobs[toolName] = append(b.jobs[toolName], job)
 }
 
 func (b *Belt) RunJobs(ctx context.Context) {
 	crn := cron.New()
 
-	for i := range b.jobs {
-		job := b.jobs[i]
+	for toolName, jobs := range b.jobs {
+		for i := range jobs {
+			job := b.jobs[toolName][i]
 
-		log.Printf("loaded job %q with schedule %q", job.Name(), job.Schedule())
+			log.Printf("loaded job \"%s/%s\" with schedule %q", toolName, job.Name(), job.Schedule())
 
-		err := crn.AddFunc(
-			job.Schedule(),
-			func() {
-				log.Printf("running job %s", job.Name())
-				jobCtx, cancel := context.WithTimeout(ctx, job.Timeout())
-				defer cancel()
+			err := crn.AddFunc(
+				job.Schedule(),
+				func() {
+					log.Printf("running job \"%s/%s\"", toolName, job.Name())
+					jobCtx, cancel := context.WithTimeout(ctx, job.Timeout())
+					defer cancel()
 
-				doneCh := make(chan error, 1)
-				panicCh := make(chan interface{}, 1)
+					doneCh := make(chan error, 1)
+					panicCh := make(chan interface{}, 1)
 
-				go func() {
-					defer func() {
-						if p := recover(); p != nil {
-							panicCh <- p
-						}
+					go func() {
+						defer func() {
+							if p := recover(); p != nil {
+								panicCh <- p
+							}
+						}()
+
+						doneCh <- job.Run(jobCtx)
 					}()
 
-					doneCh <- job.Run(jobCtx)
-				}()
-
-				select {
-				case err := <-doneCh:
-					if err != nil {
-						log.Printf("error running job %s: %v", job.Name(), err)
-					} else {
-						log.Printf("ran job %s", job.Name())
+					select {
+					case err := <-doneCh:
+						if err != nil {
+							log.Printf("error running job %s: %v", job.Name(), err)
+						} else {
+							log.Printf("ran job %s", job.Name())
+						}
+					case p := <-panicCh:
+						log.Printf("error running job %s, panicked: %v", job.Name(), p)
+					case <-ctx.Done():
+						if ctx.Err() == context.DeadlineExceeded {
+							log.Printf("parent context timed out during job: %s", job.Name())
+						} else if ctx.Err() == context.Canceled {
+							log.Printf("parent context cancelled during job: %s", job.Name())
+						}
 					}
-				case p := <-panicCh:
-					log.Printf("error running job %s, panicked: %v", job.Name(), p)
-				case <-ctx.Done():
-					if ctx.Err() == context.DeadlineExceeded {
-						log.Printf("parent context timed out during job: %s", job.Name())
-					} else if ctx.Err() == context.Canceled {
-						log.Printf("parent context cancelled during job: %s", job.Name())
-					}
-				}
-			},
-		)
-		if err != nil {
-			log.Printf("failed to add job %s to cron: %v", job.Name(), err)
+				},
+			)
+			if err != nil {
+				log.Printf("failed to add job %s to cron: %v", job.Name(), err)
+			}
 		}
 	}
 
