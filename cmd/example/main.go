@@ -48,7 +48,7 @@ func main() {
 		}
 	}()
 
-	tb.RunJobs(ctx)
+	go tb.RunJobs(ctx)
 
 	tb.RunServer(ctx, "0.0.0.0", "3000")
 }
