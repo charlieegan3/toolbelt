@@ -6,9 +6,13 @@ share HTTP routers, datastores and config to make it faster to deploy small tool
 Tool Belt has been created to bring together a number of utility tools I have been running separately. Tools I have
 built for toolbelt:
 
-* [tool-webhook-rss](https://github.com/charlieegan3/tool-webhook-rss)
-* [tool-twitter-rss](https://github.com/charlieegan3/tool-twitter-rss)
 * [tool-activities-rss](https://github.com/charlieegan3/tool-activities-rss)
+* [tool-airtable-contacts](https://github.com/charlieegan3/tool-airtable-contacts)
+* [tool-inoreader-github-actions-trigger](https://github.com/charlieegan3/tool-inoreader-github-actions-trigger)
+* [tool-json-status](https://github.com/charlieegan3/tool-json-status)
+* [tool-subpub](https://github.com/charlieegan3/tool-subpub)
+* [tool-twitter-rss](https://github.com/charlieegan3/tool-twitter-rss)
+* [tool-webhook-rss](https://github.com/charlieegan3/tool-webhook-rss)
 
 As you can see, the idea is to bring together a number of other small to _tiny_ tools under a single monolithic
 deployment.
