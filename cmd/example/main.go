@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"github.com/charlieegan3/toolbelt/pkg/example"
-	"github.com/charlieegan3/toolbelt/pkg/tool"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/charlieegan3/toolbelt/pkg/example"
+	"github.com/charlieegan3/toolbelt/pkg/tool"
 )
 
 // this is an example use of a Tool Belt showing the registration of an example Hello World tool
