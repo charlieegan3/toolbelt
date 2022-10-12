@@ -30,6 +30,7 @@ func (jt *JobsTool) FeatureSet() apis.FeatureSet {
 func (jt *JobsTool) Jobs() ([]apis.Job, error) {
 	return []apis.Job{&exampleJob{Count: jt.Count}}, nil
 }
+func (jt *JobsTool) ExternalJobsFuncSet(func(job apis.ExternalJob) error) {}
 
 func (jt *JobsTool) SetConfig(config map[string]any) error { return nil }
 func (jt *JobsTool) DatabaseMigrations() (*embed.FS, string, error) {

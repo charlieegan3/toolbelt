@@ -20,6 +20,9 @@ type FeatureSet struct {
 
 	// Jobs, if true, indicates that the tool has jobs which the belt must run
 	Jobs bool
+
+	// ExternalJobs, if true, indicates that the tool needs a function by which to start external jobs
+	ExternalJobs bool
 }
 
 type Tool interface {
@@ -45,4 +48,7 @@ type Tool interface {
 
 	// Jobs returns a list of jobs that the tool defines and needs to have run
 	Jobs() ([]Job, error)
+
+	// ExternalJobsFunc sets the function that the tool can use to start external jobs
+	ExternalJobsFuncSet(func(job ExternalJob) error)
 }

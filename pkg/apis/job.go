@@ -29,7 +29,7 @@ type ExternalJobRunner interface {
 	Configure(config map[string]any) error
 
 	// RunJob takes an external job and runs it
-	RunJob(job *ExternalJob) error
+	RunJob(job ExternalJob) error
 }
 
 // ExternalJob is an interface for a job to run on by an ExternalJobRunner

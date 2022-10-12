@@ -44,6 +44,7 @@ func (hw *HelloWorld) DatabaseSet(db *sql.DB) {}
 func (hw *HelloWorld) Jobs() ([]apis.Job, error) {
 	return []apis.Job{}, nil
 }
+func (hw *HelloWorld) ExternalJobsFuncSet(func(job apis.ExternalJob) error) {}
 
 func (hw *HelloWorld) HTTPAttach(router *mux.Router) error {
 	router.HandleFunc("", utilshttp.BuildRedirectHandler(hw.HTTPPath()+"/")).Methods("GET")

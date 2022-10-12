@@ -51,6 +51,7 @@ func (d *DatabaseTool) DatabaseSet(db *sql.DB) {
 func (d *DatabaseTool) Jobs() ([]apis.Job, error) {
 	return []apis.Job{}, nil
 }
+func (d *DatabaseTool) ExternalJobsFuncSet(func(job apis.ExternalJob) error) {}
 
 func (d *DatabaseTool) HTTPAttach(router *mux.Router) error {
 	router.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {

@@ -51,6 +51,7 @@ func (c *ConfigTool) DatabaseSet(db *sql.DB) {}
 func (c *ConfigTool) Jobs() ([]apis.Job, error) {
 	return []apis.Job{}, nil
 }
+func (c *ConfigTool) ExternalJobsFuncSet(func(job apis.ExternalJob) error) {}
 
 func (c *ConfigTool) HTTPAttach(router *mux.Router) error {
 	router.HandleFunc("", utilshttp.BuildRedirectHandler(c.HTTPPath()+"/")).Methods("GET")

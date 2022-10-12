@@ -30,6 +30,8 @@ type Belt struct {
 	db *sql.DB
 
 	jobs map[string][]apis.Job
+
+	externalJobRunners map[string]apis.ExternalJobRunner
 }
 
 // NewBelt creates a new Belt struct with an initalized router
@@ -40,6 +42,28 @@ func NewBelt() *Belt {
 	return &Belt{
 		Router: r,
 		jobs:   make(map[string][]apis.Job),
+	}
+}
+
+// AddExternalJobRunner adds a new external job runner to the belt. Jobs can be run using this runner by referencing the runner's name
+func (b *Belt) AddExternalJobRunner(runner apis.ExternalJobRunner) {
+	if b.externalJobRunners == nil {
+		b.externalJobRunners = make(map[string]apis.ExternalJobRunner)
+	}
+
+	b.externalJobRunners[runner.Name()] = runner
+
+}
+
+// ExternalJobsFunc returns a function which can be used to run jobs from external sources
+func (b *Belt) ExternalJobsFunc() func(job apis.ExternalJob) error {
+	return func(job apis.ExternalJob) error {
+		runner, ok := b.externalJobRunners[job.RunnerName()]
+		if !ok {
+			return fmt.Errorf("failed to find runner %s", job.RunnerName())
+		}
+
+		return runner.RunJob(job)
 	}
 }
 
@@ -55,6 +79,10 @@ func (b *Belt) AddTool(tool apis.Tool) error {
 		if err != nil {
 			return fmt.Errorf("failed to set config for tool %s: %w", tool.Name(), err)
 		}
+	}
+
+	if tool.FeatureSet().ExternalJobs {
+		tool.ExternalJobsFuncSet(b.ExternalJobsFunc())
 	}
 
 	if tool.FeatureSet().Database {
