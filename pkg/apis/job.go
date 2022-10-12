@@ -23,14 +23,22 @@ type Job interface {
 // ExternalJobRunner is an interface which defines a runner for jobs outside the toolbelt. This is
 // used for jobs which need other binaries, more compute/ram etc.
 type ExternalJobRunner interface {
+	// Name returns the name of the job runner, used by jobs to select this runner
+	Name() string
+	// Configure sets the config for the job runner
 	Configure(config map[string]any) error
+
+	// RunJob takes an external job and runs it
 	RunJob(job *ExternalJob) error
 }
 
 // ExternalJob is an interface for a job to run on by an ExternalJobRunner
 type ExternalJob interface {
-	// Name returns the name of the job for display purposes
+	// Name returns the name of the job
 	Name() string
+
+	// RunnerName returns the name of the runner to use
+	RunnerName() string
 
 	// Config returns the configuration for the job to be handed to the external job runner
 	Config() map[string]any
