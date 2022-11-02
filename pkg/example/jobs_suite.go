@@ -32,7 +32,7 @@ func (s *ExampleJobsToolSuite) TestJobsTool() {
 
 	jobsTool := &JobsTool{Count: &count}
 
-	err := tb.AddTool(jobsTool)
+	err := tb.AddTool(context.Background(), jobsTool)
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(context.Background())

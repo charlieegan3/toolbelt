@@ -31,7 +31,7 @@ func (s *ExampleDatabaseToolSuite) TestDatabaseTool() {
 
 	databaseTool := &DatabaseTool{}
 
-	err := tb.AddTool(databaseTool)
+	err := tb.AddTool(context.Background(), databaseTool)
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(context.Background())

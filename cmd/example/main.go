@@ -22,18 +22,18 @@ func main() {
 		},
 	})
 
-	err := tb.AddTool(&example.HelloWorld{})
+	err := tb.AddTool(context.Background(), &example.HelloWorld{})
 	if err != nil {
 		log.Fatalf("failed to add tool: %v", err)
 	}
 
-	err = tb.AddTool(&example.ConfigTool{})
+	err = tb.AddTool(context.Background(), &example.ConfigTool{})
 	if err != nil {
 		log.Fatalf("failed to add tool: %v", err)
 	}
 
 	count := 0
-	err = tb.AddTool(&example.JobsTool{Count: &count})
+	err = tb.AddTool(context.Background(), &example.JobsTool{Count: &count})
 	if err != nil {
 		log.Fatalf("failed to add tool: %v", err)
 	}

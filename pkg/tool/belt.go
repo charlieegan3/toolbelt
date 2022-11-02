@@ -68,7 +68,7 @@ func (b *Belt) ExternalJobsFunc() func(job apis.ExternalJob) error {
 }
 
 // AddTool adds a new tool to the belt. Each tool is given a subrouter with the base path set to the tool's HTTPPath
-func (b *Belt) AddTool(tool apis.Tool) error {
+func (b *Belt) AddTool(ctx context.Context, tool apis.Tool) error {
 	if tool.FeatureSet().Config {
 		toolConfig, ok := b.config[tool.Name()]
 		if !ok {
@@ -90,12 +90,20 @@ func (b *Belt) AddTool(tool apis.Tool) error {
 			return fmt.Errorf("tool %s requires a database but none was provided", tool.Name())
 		}
 
+		// open a connection to the database for this set of migrations, using postgres.WithInstance seems to leak
+		// connections to we use postgres.WithConnection instead
+		conn, err := b.db.Conn(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to get database connection to migrate tool %s: %w", tool.Name(), err)
+		}
+		defer conn.Close()
+
 		migrations, path, err := tool.DatabaseMigrations()
 		if err != nil {
 			return fmt.Errorf("failed to get database migrations for tool %s: %w", tool.Name(), err)
 		}
 
-		driver, err := postgres.WithInstance(b.db, &postgres.Config{
+		driver, err := postgres.WithConnection(ctx, conn, &postgres.Config{
 			MigrationsTable: fmt.Sprintf("schema_migrations_%s", strings.ReplaceAll(tool.Name(), "-", "_")),
 		})
 		if err != nil {
