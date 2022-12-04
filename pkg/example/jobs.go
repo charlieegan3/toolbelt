@@ -39,6 +39,9 @@ func (jt *JobsTool) DatabaseMigrations() (*embed.FS, string, error) {
 func (jt *JobsTool) DatabaseSet(db *sql.DB)              {}
 func (jt *JobsTool) HTTPPath() string                    { return "" }
 func (jt *JobsTool) HTTPAttach(router *mux.Router) error { return nil }
+func (jt *JobsTool) HTTPHost() string {
+	return ""
+}
 
 // exampleJob shows a trivial apis.Job implementation
 type exampleJob struct {

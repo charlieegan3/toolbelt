@@ -125,11 +125,20 @@ func (b *Belt) AddTool(ctx context.Context, tool apis.Tool) error {
 	}
 
 	if tool.FeatureSet().HTTP {
-		path := tool.HTTPPath()
-		if path == "" {
-			return fmt.Errorf("tool %s cannot use the HTTP feature with a blank HTTPPath", tool.Name())
+		var toolRouter *mux.Router
+		if tool.FeatureSet().HTTPHost {
+			host := tool.HTTPHost()
+			if host == "" {
+				return fmt.Errorf("tool %s requires a host but none was provided", tool.Name())
+			}
+			toolRouter = b.Router.Host(host).Subrouter()
+		} else {
+			path := tool.HTTPPath()
+			if path == "" {
+				return fmt.Errorf("tool %s cannot use the HTTP feature with a blank HTTPPath", tool.Name())
+			}
+			toolRouter = b.Router.PathPrefix(fmt.Sprintf("/%s", path)).Subrouter()
 		}
-		toolRouter := b.Router.PathPrefix(fmt.Sprintf("/%s", path)).Subrouter()
 		err := tool.HTTPAttach(toolRouter)
 		if err != nil {
 			return fmt.Errorf("failed to attach tool: %v", err)

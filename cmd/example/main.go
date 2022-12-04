@@ -38,6 +38,11 @@ func main() {
 		log.Fatalf("failed to add tool: %v", err)
 	}
 
+	err = tb.AddTool(context.Background(), &example.HostHTTPTool{})
+	if err != nil {
+		log.Fatalf("failed to add tool: %v", err)
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

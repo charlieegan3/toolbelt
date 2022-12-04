@@ -34,6 +34,9 @@ func (d *DatabaseTool) FeatureSet() apis.FeatureSet {
 func (d *DatabaseTool) HTTPPath() string {
 	return "database"
 }
+func (d *DatabaseTool) HTTPHost() string {
+	return ""
+}
 
 // SetConfig is a no-op for this tool
 func (d *DatabaseTool) SetConfig(config map[string]any) error {

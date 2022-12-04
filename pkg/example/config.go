@@ -30,6 +30,9 @@ func (c *ConfigTool) FeatureSet() apis.FeatureSet {
 func (c *ConfigTool) HTTPPath() string {
 	return "example-config-tool"
 }
+func (c *ConfigTool) HTTPHost() string {
+	return ""
+}
 
 func (c *ConfigTool) SetConfig(config map[string]any) error {
 	val, ok := config["exampleValue"].(string)

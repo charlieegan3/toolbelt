@@ -18,6 +18,9 @@ type FeatureSet struct {
 	// HTTP, if true, indicates that the tool needs to mount a subrouter on the tool belt webserver
 	HTTP bool
 
+	// HTTPHost, if true, indicates that the tool needs a subrouter with a host matcher
+	HTTPHost bool
+
 	// Jobs, if true, indicates that the tool has jobs which the belt must run
 	Jobs bool
 
@@ -43,6 +46,8 @@ type Tool interface {
 
 	// HTTPPath returns the base path to use for the subrouter
 	HTTPPath() string
+	// HTTPHost returns the host to use for the subrouter, if not blank
+	HTTPHost() string
 	// HTTPAttach configures the tool's subrouter
 	HTTPAttach(router *mux.Router) error
 

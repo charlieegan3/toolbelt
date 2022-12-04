@@ -29,6 +29,9 @@ func (hw *HelloWorld) FeatureSet() apis.FeatureSet {
 func (hw *HelloWorld) HTTPPath() string {
 	return "example-hello-world"
 }
+func (hw *HelloWorld) HTTPHost() string {
+	return ""
+}
 
 // SetConfig is a no-op for this tool
 func (hw *HelloWorld) SetConfig(config map[string]any) error {
