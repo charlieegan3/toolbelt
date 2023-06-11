@@ -143,6 +143,13 @@ func (b *Belt) AddTool(ctx context.Context, tool apis.Tool) error {
 		}
 	}
 
+	// this needs to happen early so that the runners are available
+	// for jobs in the next step
+	externalJobsTool, ok := tool.(apis.ExternalJobsTool)
+	if tool.FeatureSet().ExternalJobs && ok {
+		externalJobsTool.ExternalJobsFuncSet(b.ExternalJobsFunc())
+	}
+
 	jobsTool, ok := tool.(apis.JobsTool)
 	if tool.FeatureSet().Jobs && ok {
 		loadedJobs, err := jobsTool.Jobs()
@@ -152,11 +159,6 @@ func (b *Belt) AddTool(ctx context.Context, tool apis.Tool) error {
 		for _, job := range loadedJobs {
 			b.AddJob(tool.Name(), job)
 		}
-	}
-
-	externalJobsTool, ok := tool.(apis.ExternalJobsTool)
-	if tool.FeatureSet().ExternalJobs && ok {
-		externalJobsTool.ExternalJobsFuncSet(b.ExternalJobsFunc())
 	}
 
 	return nil
