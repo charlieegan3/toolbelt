@@ -2,12 +2,8 @@ package example
 
 import (
 	"context"
-	"database/sql"
-	"embed"
 	"fmt"
 	"time"
-
-	"github.com/gorilla/mux"
 
 	"github.com/charlieegan3/toolbelt/pkg/apis"
 )
@@ -27,20 +23,9 @@ func (jt *JobsTool) FeatureSet() apis.FeatureSet {
 	}
 }
 
+func (jt *JobsTool) SetConfig(config map[string]any) error { return nil }
 func (jt *JobsTool) Jobs() ([]apis.Job, error) {
 	return []apis.Job{&exampleJob{Count: jt.Count}}, nil
-}
-func (jt *JobsTool) ExternalJobsFuncSet(func(job apis.ExternalJob) error) {}
-
-func (jt *JobsTool) SetConfig(config map[string]any) error { return nil }
-func (jt *JobsTool) DatabaseMigrations() (*embed.FS, string, error) {
-	return nil, "", fmt.Errorf("not implemented")
-}
-func (jt *JobsTool) DatabaseSet(db *sql.DB)              {}
-func (jt *JobsTool) HTTPPath() string                    { return "" }
-func (jt *JobsTool) HTTPAttach(router *mux.Router) error { return nil }
-func (jt *JobsTool) HTTPHost() string {
-	return ""
 }
 
 // exampleJob shows a trivial apis.Job implementation

@@ -81,11 +81,8 @@ func (b *Belt) AddTool(ctx context.Context, tool apis.Tool) error {
 		}
 	}
 
-	if tool.FeatureSet().ExternalJobs {
-		tool.ExternalJobsFuncSet(b.ExternalJobsFunc())
-	}
-
-	if tool.FeatureSet().Database {
+	databaseTool, ok := tool.(apis.DatabaseTool)
+	if tool.FeatureSet().Database && ok {
 		if b.db == nil {
 			return fmt.Errorf("tool %s requires a database but none was provided", tool.Name())
 		}
@@ -98,7 +95,7 @@ func (b *Belt) AddTool(ctx context.Context, tool apis.Tool) error {
 		}
 		defer conn.Close()
 
-		migrations, path, err := tool.DatabaseMigrations()
+		migrations, path, err := databaseTool.DatabaseMigrations()
 		if err != nil {
 			return fmt.Errorf("failed to get database migrations for tool %s: %w", tool.Name(), err)
 		}
@@ -121,38 +118,45 @@ func (b *Belt) AddTool(ctx context.Context, tool apis.Tool) error {
 			return fmt.Errorf("failed to run database migrations for tool %s: %w", tool.Name(), err)
 		}
 
-		tool.DatabaseSet(b.db)
+		databaseTool.DatabaseSet(b.db)
 	}
 
-	if tool.FeatureSet().HTTP {
+	httpTool, ok := tool.(apis.HTTPTool)
+	if tool.FeatureSet().HTTP && ok {
 		var toolRouter *mux.Router
 		if tool.FeatureSet().HTTPHost {
-			host := tool.HTTPHost()
+			host := httpTool.HTTPHost()
 			if host == "" {
 				return fmt.Errorf("tool %s requires a host but none was provided", tool.Name())
 			}
 			toolRouter = b.Router.Host(host).Subrouter()
 		} else {
-			path := tool.HTTPPath()
+			path := httpTool.HTTPPath()
 			if path == "" {
 				return fmt.Errorf("tool %s cannot use the HTTP feature with a blank HTTPPath", tool.Name())
 			}
 			toolRouter = b.Router.PathPrefix(fmt.Sprintf("/%s", path)).Subrouter()
 		}
-		err := tool.HTTPAttach(toolRouter)
+		err := httpTool.HTTPAttach(toolRouter)
 		if err != nil {
 			return fmt.Errorf("failed to attach tool: %v", err)
 		}
 	}
 
-	if tool.FeatureSet().Jobs {
-		loadedJobs, err := tool.Jobs()
+	jobsTool, ok := tool.(apis.JobsTool)
+	if tool.FeatureSet().Jobs && ok {
+		loadedJobs, err := jobsTool.Jobs()
 		if err != nil {
 			return fmt.Errorf("failed to get jobs for tool %s: %w", tool.Name(), err)
 		}
 		for _, job := range loadedJobs {
 			b.AddJob(tool.Name(), job)
 		}
+	}
+
+	externalJobsTool, ok := tool.(apis.ExternalJobsTool)
+	if tool.FeatureSet().ExternalJobs && ok {
+		externalJobsTool.ExternalJobsFuncSet(b.ExternalJobsFunc())
 	}
 
 	return nil
@@ -166,30 +170,30 @@ func (b *Belt) SetDatabase(db *sql.DB) {
 	b.db = db
 }
 
-func (b *Belt) DatabaseDownMigrate(tool apis.Tool) error {
+func (b *Belt) DatabaseDownMigrate(tool apis.DatabaseTool) error {
 	if b.db == nil {
-		return fmt.Errorf("tool %s requires a database but none was provided", tool.Name())
+		return fmt.Errorf("tool requires a database but none was provided")
 	}
 
 	migrations, path, err := tool.DatabaseMigrations()
 	if err != nil {
-		return fmt.Errorf("failed to get database migrations for tool %s: %w", tool.Name(), err)
+		return fmt.Errorf("failed to get database migrations for tool: %w", err)
 	}
 
 	driver, err := postgres.WithInstance(b.db, &postgres.Config{})
 	if err != nil {
-		return fmt.Errorf("failed to create database driver for tool %s: %w", tool.Name(), err)
+		return fmt.Errorf("failed to create database driver for tool: %w", err)
 	}
 
 	source, err := iofs.New(migrations, path)
 	m, err := migrate.NewWithInstance("iofs", source, "postgres", driver)
 	if err != nil {
-		return fmt.Errorf("failed to create database migrate instance for tool %s: %w", tool.Name(), err)
+		return fmt.Errorf("failed to create database migrate instance for tool: %w", err)
 	}
 
 	err = m.Down()
 	if err != nil && err != migrate.ErrNoChange {
-		return fmt.Errorf("failed to run database down migrations for tool %s: %w", tool.Name(), err)
+		return fmt.Errorf("failed to run database down migrations for tool: %w", err)
 	}
 	return nil
 }

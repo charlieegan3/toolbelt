@@ -1,10 +1,11 @@
 package databasetest
 
 import (
-	"github.com/charlieegan3/toolbelt/pkg/example"
 	"testing"
 
 	_ "github.com/lib/pq"
+
+	"github.com/charlieegan3/toolbelt/pkg/example"
 )
 
 func TestDatabaseSuite(t *testing.T) {

@@ -1,11 +1,9 @@
 package example
 
 import (
-	"database/sql"
-	"embed"
-	"fmt"
-	"github.com/gorilla/mux"
 	"net/http"
+
+	"github.com/gorilla/mux"
 
 	"github.com/charlieegan3/toolbelt/pkg/apis"
 	utilshttp "github.com/charlieegan3/toolbelt/pkg/utils/http"
@@ -37,17 +35,6 @@ func (hw *HelloWorld) HTTPHost() string {
 func (hw *HelloWorld) SetConfig(config map[string]any) error {
 	return nil
 }
-
-func (hw *HelloWorld) DatabaseMigrations() (*embed.FS, string, error) {
-	return nil, "", fmt.Errorf("not implemented")
-}
-
-func (hw *HelloWorld) DatabaseSet(db *sql.DB) {}
-
-func (hw *HelloWorld) Jobs() ([]apis.Job, error) {
-	return []apis.Job{}, nil
-}
-func (hw *HelloWorld) ExternalJobsFuncSet(func(job apis.ExternalJob) error) {}
 
 func (hw *HelloWorld) HTTPAttach(router *mux.Router) error {
 	router.HandleFunc("", utilshttp.BuildRedirectHandler(hw.HTTPPath()+"/")).Methods("GET")

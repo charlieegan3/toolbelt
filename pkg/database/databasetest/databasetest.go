@@ -2,10 +2,12 @@ package databasetest
 
 import (
 	"database/sql"
-	"github.com/charlieegan3/toolbelt/pkg/database"
+	"testing"
+
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
-	"testing"
+
+	"github.com/charlieegan3/toolbelt/pkg/database"
 )
 
 type DependentSuite interface {

@@ -3,12 +3,13 @@ package example
 import (
 	"context"
 	"database/sql"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 	"io"
 	"net/http"
 	"net/url"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/charlieegan3/toolbelt/pkg/tool"
 )

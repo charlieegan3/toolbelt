@@ -3,11 +3,12 @@ package example
 import (
 	"context"
 	"database/sql"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/charlieegan3/toolbelt/pkg/tool"
 )

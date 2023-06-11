@@ -1,8 +1,10 @@
 package apis
 
 import (
+	"context"
 	"database/sql"
 	"embed"
+
 	"github.com/gorilla/mux"
 )
 
@@ -11,6 +13,7 @@ import (
 type FeatureSet struct {
 	// Config, if true, indicates that the tool expects some config values to be passed at initialization time
 	Config bool
+
 	// Database, if true, indicates that the tool expects to connect to the tool belt database, owns a schema and will
 	// have migrations that must be run.
 	Database bool
@@ -20,6 +23,9 @@ type FeatureSet struct {
 
 	// HTTPHost, if true, indicates that the tool needs a subrouter with a host matcher
 	HTTPHost bool
+
+	// TCP, if true, indicates that the tool needs to listen on a TCP port
+	TCP bool
 
 	// Jobs, if true, indicates that the tool has jobs which the belt must run
 	Jobs bool
@@ -38,22 +44,36 @@ type Tool interface {
 
 	// SetConfig sets the configuration for the tool
 	SetConfig(config map[string]interface{}) error
+}
 
-	// DatabaseMigrate runs the database migrations for the tool
-	DatabaseMigrations() (*embed.FS, string, error)
-	// DatabaseSet sets the database connection for the tool
-	DatabaseSet(db *sql.DB)
-
+type HTTPTool interface {
 	// HTTPPath returns the base path to use for the subrouter
 	HTTPPath() string
 	// HTTPHost returns the host to use for the subrouter, if not blank
 	HTTPHost() string
 	// HTTPAttach configures the tool's subrouter
 	HTTPAttach(router *mux.Router) error
+}
 
+type TCPTool interface {
+	// TCPStart initializes one or more TCP listeners for the tool
+	TCPStart(ctx context.Context) error
+}
+
+type DatabaseTool interface {
+	// DatabaseMigrations runs the database migrations for the tool
+	DatabaseMigrations() (*embed.FS, string, error)
+	// DatabaseSet sets the database connection for the tool
+	DatabaseSet(db *sql.DB)
+}
+
+type JobsTool interface {
 	// Jobs returns a list of jobs that the tool defines and needs to have run
 	Jobs() ([]Job, error)
+}
 
-	// ExternalJobsFunc sets the function that the tool can use to start external jobs
+type ExternalJobsTool interface {
+	// ExternalJobsFuncSet sets the function that the tool can
+	// use to start external jobs
 	ExternalJobsFuncSet(func(job ExternalJob) error)
 }

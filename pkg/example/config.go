@@ -1,13 +1,13 @@
 package example
 
 import (
-	"database/sql"
-	"embed"
 	"fmt"
+	"net/http"
+
+	"github.com/gorilla/mux"
+
 	"github.com/charlieegan3/toolbelt/pkg/apis"
 	utilshttp "github.com/charlieegan3/toolbelt/pkg/utils/http"
-	"github.com/gorilla/mux"
-	"net/http"
 )
 
 // ConfigTool is an example tool which uses a configuration value in it's HTTP handler
@@ -44,17 +44,6 @@ func (c *ConfigTool) SetConfig(config map[string]any) error {
 
 	return nil
 }
-
-func (c *ConfigTool) DatabaseMigrations() (*embed.FS, string, error) {
-	return nil, "", fmt.Errorf("not implemented")
-}
-
-func (c *ConfigTool) DatabaseSet(db *sql.DB) {}
-
-func (c *ConfigTool) Jobs() ([]apis.Job, error) {
-	return []apis.Job{}, nil
-}
-func (c *ConfigTool) ExternalJobsFuncSet(func(job apis.ExternalJob) error) {}
 
 func (c *ConfigTool) HTTPAttach(router *mux.Router) error {
 	router.HandleFunc("", utilshttp.BuildRedirectHandler(c.HTTPPath()+"/")).Methods("GET")
