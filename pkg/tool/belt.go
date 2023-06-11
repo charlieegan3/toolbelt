@@ -143,6 +143,14 @@ func (b *Belt) AddTool(ctx context.Context, tool apis.Tool) error {
 		}
 	}
 
+	tcpTool, ok := tool.(apis.TCPTool)
+	if tool.FeatureSet().TCP && ok {
+		err := tcpTool.TCPStart(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to start TCP service for tool: %v", err)
+		}
+	}
+
 	// this needs to happen early so that the runners are available
 	// for jobs in the next step
 	externalJobsTool, ok := tool.(apis.ExternalJobsTool)
