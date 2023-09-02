@@ -131,7 +131,7 @@ func (b *Belt) AddTool(ctx context.Context, tool apis.Tool) error {
 			}
 			toolRouter = b.Router.Host(host).Subrouter()
 		} else {
-			path := httpTool.HTTPPath()
+			path := strings.TrimPrefix(httpTool.HTTPPath(), "/")
 			if path == "" {
 				return fmt.Errorf("tool %s cannot use the HTTP feature with a blank HTTPPath", tool.Name())
 			}
