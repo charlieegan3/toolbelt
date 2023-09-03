@@ -15,6 +15,7 @@ require (
 )
 
 require (
+	github.com/Jeffail/gabs/v2 v2.7.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect

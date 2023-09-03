@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Jeffail/gabs/v2"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
@@ -209,11 +210,35 @@ func (b *Belt) DatabaseDownMigrate(tool apis.DatabaseTool) error {
 }
 
 func (b *Belt) RunServer(ctx context.Context, host, port string) {
+	var path string
+
+	config := gabs.Wrap(b.config)
+
+	readTimeout := 30 * time.Second
+	path = "server.timeout.read"
+	readTimeoutString, ok := config.Path(path).Data().(string)
+	if ok {
+		duration, err := time.ParseDuration(readTimeoutString)
+		if err == nil {
+			readTimeout = duration
+		}
+	}
+
+	writeTimeout := 30 * time.Second
+	path = "server.timeout.write"
+	writeTimeoutString, ok := config.Path(path).Data().(string)
+	if ok {
+		duration, err := time.ParseDuration(writeTimeoutString)
+		if err == nil {
+			writeTimeout = duration
+		}
+	}
+
 	b.server = &http.Server{
 		Handler:      b.Router,
 		Addr:         fmt.Sprintf("%s:%s", host, port),
-		WriteTimeout: 30 * time.Second,
-		ReadTimeout:  30 * time.Second,
+		WriteTimeout: writeTimeout,
+		ReadTimeout:  readTimeout,
 	}
 
 	go func() {
