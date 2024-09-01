@@ -53,7 +53,6 @@ func (b *Belt) AddExternalJobRunner(runner apis.ExternalJobRunner) {
 	}
 
 	b.externalJobRunners[runner.Name()] = runner
-
 }
 
 // ExternalJobsFunc returns a function which can be used to run jobs from external sources
@@ -109,6 +108,10 @@ func (b *Belt) AddTool(ctx context.Context, tool apis.Tool) error {
 		}
 
 		source, err := iofs.New(migrations, path)
+		if err != nil {
+			return fmt.Errorf("failed to create database source for tool %s: %w", tool.Name(), err)
+		}
+
 		m, err := migrate.NewWithInstance("iofs", source, "postgres", driver)
 		if err != nil {
 			return fmt.Errorf("failed to create database migrate instance for tool %s: %w", tool.Name(), err)
@@ -197,6 +200,10 @@ func (b *Belt) DatabaseDownMigrate(tool apis.DatabaseTool) error {
 	}
 
 	source, err := iofs.New(migrations, path)
+	if err != nil {
+		return fmt.Errorf("failed to create database source for tool: %w", err)
+	}
+
 	m, err := migrate.NewWithInstance("iofs", source, "postgres", driver)
 	if err != nil {
 		return fmt.Errorf("failed to create database migrate instance for tool: %w", err)
@@ -248,18 +255,17 @@ func (b *Belt) RunServer(ctx context.Context, host, port string) {
 		}
 	}()
 
-	select {
-	case <-ctx.Done():
-		log.Println("Shutting down server")
+	<-ctx.Done()
 
-		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-		defer cancel()
+	log.Println("Shutting down server")
 
-		if err := b.server.Shutdown(ctx); err != nil {
-			log.Fatalf("Graceful shutdown failed: %s", err)
-		}
-		log.Println("Server gracefully stopped")
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	if err := b.server.Shutdown(ctx); err != nil {
+		log.Fatalf("Graceful shutdown failed: %s", err)
 	}
+	log.Println("Server gracefully stopped")
 }
 
 func (b *Belt) AddJob(toolName string, job apis.Job) {
@@ -330,9 +336,6 @@ func (b *Belt) RunJobs(ctx context.Context) {
 		crn.Start()
 	}()
 
-	select {
-	case <-ctx.Done():
-		log.Println("stopping job worker")
-		crn.Stop()
-	}
+	log.Println("stopping job worker")
+	crn.Stop()
 }

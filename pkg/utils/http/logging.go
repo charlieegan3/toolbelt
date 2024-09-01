@@ -2,9 +2,10 @@ package http
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 type loggingResponseWriter struct {
@@ -34,7 +35,12 @@ func InitMiddlewareLogging() func(http.Handler) http.Handler {
 
 			if r == nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("request to logging middleware was nil"))
+
+				_, err := w.Write([]byte("request to logging middleware was nil"))
+				if err != nil {
+					entry.Error(err)
+				}
+
 				return
 			}
 
